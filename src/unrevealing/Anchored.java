@@ -17,6 +17,8 @@ import ca.uvic.css.util.*;
 public class Anchored {
 	private static Anchored uniqueInstance;
 	private static Graph graph; 
+    private static SeparateChainingHash<Integer, Integer> sth;
+    private static int vertexIndex; 
 
 	private Anchored() {}
 
@@ -314,17 +316,20 @@ public class Anchored {
 
         if (countRemoveCore > 0) {
             boolean isRooted = false;
-            SeparateChainingHash<Integer, Integer> sth = new SeparateChainingHash<Integer, Integer>(countRemoveCore);
-            for (int ve = 0; ve <= ver.length-1; ++ve) {
-                if (degKCore[ver[ve]] == 0) {
-                    isRooted = checkRootedTree(degKCore, ver, ve, kc3, sth);
-                    System.out.println("vertex["+ve+"]="+ver[ve]+" "+isRooted);
+            Arrays.fill(verMarked, false);
+            // SeparateChainingHash<Integer, Integer> sth = new SeparateChainingHash<Integer, Integer>(countRemoveCore);
+            sth = new SeparateChainingHash<Integer, Integer>(countRemoveCore);
+            for (vertexIndex = 0; vertexIndex <= ver.length-1; ++vertexIndex) {
+            // vertexIndex = 1;
+                if (degKCore[ver[vertexIndex]] == 0) {
+                    isRooted = checkRootedTree(degKCore, ver, ver[vertexIndex], verMarked, kc3);
+                    System.out.println("vertex["+vertexIndex+"]="+ver[vertexIndex]+" "+isRooted);
                 }
             }
 
             for (int i = 0; i < countRemoveCore; ++i) {
                 for (Integer key : sth.st[i].keys()) {
-                    System.out.println("i: " + i + ", " + key + ", " + sth.st[i].get(key));
+                    System.out.println("i: " + i + ", " + key + ", " + sth.st[i].get(key)+", "+sth.st[i].size());
                 }
             }
         }
@@ -334,17 +339,25 @@ public class Anchored {
         System.out.println( "finish" );
     }
 
-    public static boolean checkRootedTree(int[] degreeKCore, int[] vertex, int v, KCoreWG_BZ kc3, SeparateChainingHash<Integer, Integer> sth) {
+    public static boolean checkRootedTree(int[] degreeKCore, int[] vertex, int v, boolean[] verMarked, KCoreWG_BZ kc3) {
         boolean isRooted = false;
 
-        if (degreeKCore[vertex[v]] == 0) {
-            int[] neighbors = kc3.graph.getNeighbors(vertex[v]);
+        // System.out.println("v: "+v+" neighbors(): "+degreeKCore[v]);
+        if (degreeKCore[v] == 0 && !verMarked[v]) {
+            verMarked[v] = true;
+            int[] neighbors = kc3.graph.getNeighbors(v);
+            // System.out.println("length: "+neighbors.length);
             for (int i = 0; i <= neighbors.length-1; ++i) {
-                sth.st[v].put(neighbors[i], 1);
-                if (degreeKCore[neighbors[i]] == 0)
-                    isRooted = checkRootedTree(degreeKCore, vertex, neighbors[i], kc3, sth);
+                if (!verMarked[neighbors[i]])
+                    sth.st[vertexIndex].put(neighbors[i], 1);
+                // System.out.println("vertexIndex: "+vertexIndex+" i: "+i+" neighbors("+ neighbors[i] +"): "+degreeKCore[neighbors[i]]+ " "+verMarked[neighbors[i]]+ " v " + v + " Marked " + verMarked[v]);
+                if (degreeKCore[neighbors[i]] == 0) {
+                    // System.out.println("neighbors[i]: "+neighbors[i]);
+                    isRooted = checkRootedTree(degreeKCore, vertex, neighbors[i], verMarked, kc3); 
+                }
                 else
                     isRooted = true;
+                // System.out.println("i: "+ i+ " v: "+v);
             }
         }
         return isRooted;
