@@ -333,6 +333,12 @@ public class Anchored {
                     System.out.println("i: " + i + ", " + key + ", " + sth.st[i].get(key)+", "+sth.st[i].size());
                 }
             }
+
+            Map<Integer,Integer> vertexMap = new HashMap<Integer,Integer>();
+            List<Map.Entry<Integer,Integer>> maxList = new ArrayList<Map.Entry<Integer,Integer>>(vertexMap.entrySet());
+            maxList = findFurthestVertex(countRemoveCore);
+            for (int l = 0; l < maxList.size(); ++l) 
+                System.out.println("key: " + maxList.get(l).getKey() + " value: " + maxList.get(l).getValue());
         }
 
         long endTime = System.currentTimeMillis();
@@ -390,6 +396,34 @@ public class Anchored {
         }
         // System.out.println("\n");
         return 0; 
+    }
+
+    public static List<Map.Entry<Integer,Integer>> findFurthestVertex(int countRemoveCore) {
+        int max1 = 0;
+        int max2 = 0;
+        int key1 = 0;
+        int key2 = 0;
+        
+        for (int i = 0; i < countRemoveCore; ++i) {
+            for (Integer key : sth.st[i].keys()) {
+                if ((max1 == 0 || max1 < sth.st[i].get(key)) && (sth.st[i].get(key) != 0)) {
+                    max1 = sth.st[i].get(key);
+                    key1 = key;
+                }
+
+                if ((max2 == 0 || max2 < sth.st[i].get(key)) && (sth.st[i].get(key) <= max1) && (key1 != key) && (sth.st[i].get(key) != 0)) {
+                    max2 = sth.st[i].get(key);
+                    key2 = key;
+                }
+            }
+        }
+
+        Map<Integer,Integer> tmpMap = new HashMap<Integer,Integer>();
+        tmpMap.put(key1, max1);
+        tmpMap.put(key2, max2);
+        List<Map.Entry<Integer,Integer>> result = new ArrayList<Map.Entry<Integer,Integer>>(tmpMap.entrySet());
+
+        return result;
     }
 }
 
