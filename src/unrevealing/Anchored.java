@@ -321,9 +321,10 @@ public class Anchored {
             sth = new SeparateChainingHash<Integer, Integer>(countRemoveCore);
             for (vertexIndex = 0; vertexIndex <= ver.length-1; ++vertexIndex) {
             // vertexIndex = 1;
+                int distance = 0;
                 if (degKCore[ver[vertexIndex]] == 0) {
-                    isRooted = checkRootedTree(degKCore, ver, ver[vertexIndex], verMarked, kc3);
-                    System.out.println("vertex["+vertexIndex+"]="+ver[vertexIndex]+" "+isRooted);
+                    isRooted = checkRootedTree(degKCore, ver, ver[vertexIndex], verMarked, distance, kc3);
+                    System.out.println("vertex["+vertexIndex+"]="+ver[vertexIndex]+" "+isRooted + " " + verMarked[ver[vertexIndex]]);
                 }
             }
 
@@ -339,7 +340,7 @@ public class Anchored {
         System.out.println( "finish" );
     }
 
-    public static boolean checkRootedTree(int[] degreeKCore, int[] vertex, int v, boolean[] verMarked, KCoreWG_BZ kc3) {
+    public static boolean checkRootedTree(int[] degreeKCore, int[] vertex, int v, boolean[] verMarked, int distance, KCoreWG_BZ kc3) {
         boolean isRooted = false;
 
         // System.out.println("v: "+v+" neighbors(): "+degreeKCore[v]);
@@ -347,20 +348,48 @@ public class Anchored {
             verMarked[v] = true;
             int[] neighbors = kc3.graph.getNeighbors(v);
             // System.out.println("length: "+neighbors.length);
+            // ++counter;
             for (int i = 0; i <= neighbors.length-1; ++i) {
-                if (!verMarked[neighbors[i]])
+                /*if (!verMarked[neighbors[i]]) {
                     sth.st[vertexIndex].put(neighbors[i], 1);
+                    System.out.println("checkRootedTree neighbors["+i+"]: "+neighbors[i]);
+                }*/
                 // System.out.println("vertexIndex: "+vertexIndex+" i: "+i+" neighbors("+ neighbors[i] +"): "+degreeKCore[neighbors[i]]+ " "+verMarked[neighbors[i]]+ " v " + v + " Marked " + verMarked[v]);
                 if (degreeKCore[neighbors[i]] == 0) {
                     // System.out.println("neighbors[i]: "+neighbors[i]);
-                    isRooted = checkRootedTree(degreeKCore, vertex, neighbors[i], verMarked, kc3); 
+                    isRooted = checkRootedTree(degreeKCore, vertex, neighbors[i], verMarked, distance, kc3); 
                 }
-                else
+                else {
                     isRooted = true;
+                    boolean verVisited[] = new boolean[verMarked.length];
+                    Arrays.fill(verVisited, false); // TODO: maybe we can use verMarked instead of verVisited. Check it out!
+                    sth.st[vertexIndex].put(neighbors[i], 0);
+                    computeDistance(degreeKCore, vertex, neighbors[i], verVisited, distance, kc3);
+                }
                 // System.out.println("i: "+ i+ " v: "+v);
             }
         }
         return isRooted;
+    }
+
+    public static int computeDistance(int[] degreeKCore, int[] vertex, int v, boolean[] verVisited, int distance,KCoreWG_BZ kc3) {
+        int[] neighbors = kc3.graph.getNeighbors(v);
+        // System.out.println("distance: "+ distance+ " v: "+v + " length: "+neighbors.length);
+        verVisited[v] = true;
+        ++distance;
+        for (int i = 0; i <= neighbors.length-1; ++i) {
+            // if (sth.st[vertexIndex].contains(neighbors[i]))
+            // System.out.println("contains "+sth.st[vertexIndex].contains(neighbors[i])+ " neighbors[i]: " + neighbors[i]);
+            // System.out.println("vertexIndex: "+vertexIndex+" i: "+i+" neighbors("+ neighbors[i] +"): "+degreeKCore[neighbors[i]]+ " "+verVisited[neighbors[i]]+ " v " + v + " Marked " + verVisited[v]);
+            if (degreeKCore[neighbors[i]] == 0 && !verVisited[neighbors[i]]) {
+                verVisited[neighbors[i]] = true;
+                // System.out.println("computeDistance neighbors["+i+"]: "+neighbors[i]);
+                sth.st[vertexIndex].put(neighbors[i], distance);
+                computeDistance(degreeKCore, vertex, neighbors[i], verVisited, distance, kc3);
+            }
+        }
+        // System.out.println("\n");
+        return 0; 
     }
 }
 
