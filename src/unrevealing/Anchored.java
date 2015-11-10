@@ -20,6 +20,8 @@ public class Anchored {
     private static SeparateChainingHash<Integer, Integer> sth;
     private static int vertexIndex; 
 
+    private static char vertexTreeStatus[];
+
 	private Anchored() {}
 
 	public static Anchored getInstance() {
@@ -267,7 +269,12 @@ public class Anchored {
 
         boolean verMarked[] = new boolean[ver.length];
         int degKCore[] = new int[deg.length];
+        vertexTreeStatus = new char[ver.length];
 
+        boolean verVisited[] = new boolean[verMarked.length];
+        Arrays.fill(verVisited, false);
+
+        Arrays.fill(vertexTreeStatus, 'v');
         Arrays.fill(verMarked, true);
         System.arraycopy(deg, 0, degKCore, 0, deg.length);
 /*
@@ -290,18 +297,18 @@ public class Anchored {
             isIterate = false;
             while(/*!isIterate ||*/ (degKCore[ver[v]] < k && deg[v] > 0 && v < ver.length-1)) {
                 if (verMarked[v]) {
-                    System.out.println("test: "+ver[v]+" d:"+degKCore[ver[v]]);
+                    // System.out.println("test: "+ver[v]+" d:"+degKCore[ver[v]]);
                     degKCore[ver[v]] = 0;
                     ++countRemoveCore;
                     int[] neighbors = kc3.graph.getNeighbors(ver[v]);
                     for(int i = 0; i <= neighbors.length-1; ++i) {
                         int vertex = neighbors[i];
-                        System.out.println("neighbors["+ i + "] = "+ neighbors[i]);
+                        // System.out.println("neighbors["+ i + "] = "+ neighbors[i]);
                         if (degKCore[vertex] > 0)
                             degKCore[vertex]--; 
                         if (degKCore[vertex] < k && degKCore[vertex] > 0)
                             isIterate = true;
-                        System.out.println("degKCore["+vertex+"]="+degKCore[vertex]);
+                        // System.out.println("degKCore["+vertex+"]="+degKCore[vertex]);
                     }
                     verMarked[v] = false;
                 }
@@ -323,21 +330,29 @@ public class Anchored {
             // vertexIndex = 1;
                 int distance = 0;
                 if (degKCore[ver[vertexIndex]] == 0) {
-                    isRooted = checkRootedTree(degKCore, ver, ver[vertexIndex], verMarked, distance, kc3);
-                    System.out.println("vertex["+vertexIndex+"]="+ver[vertexIndex]+" "+isRooted + " " + verMarked[ver[vertexIndex]]);
+                    isRooted = checkRootedTree(degKCore, verVisited, ver[vertexIndex], verMarked, distance, kc3);
+                    if (!isRooted && !verVisited[ver[vertexIndex]])
+                        vertexTreeStatus[ver[vertexIndex]] = 'n';
+                    // System.out.println("vertex["+vertexIndex+"]="+ver[vertexIndex]+" isRooted: "+isRooted + " verMarked: " + verMarked[ver[vertexIndex]] + " verVisited: " + verVisited[ver[vertexIndex]]);
                 }
             }
 
+            /*for (int i = 0; i < vertexTreeStatus.length; ++i) 
+                System.out.println("i: "+i+" vertexTreeStatus: "+vertexTreeStatus[i]);
             for (int i = 0; i < countRemoveCore; ++i) {
                 for (Integer key : sth.st[i].keys()) {
                     System.out.println("i: " + i + ", " + key + ", " + sth.st[i].get(key)+", "+sth.st[i].size());
                 }
-            }
+            }*/
 
             Map<Integer,Integer> vertexMap = new HashMap<Integer,Integer>();
             List<Map.Entry<Integer,Integer>> maxList = new ArrayList<Map.Entry<Integer,Integer>>(vertexMap.entrySet());
             maxList = findFurthestVertex(countRemoveCore);
-            for (int l = 0; l < maxList.size(); ++l) 
+            for (int l = 0; l < maxList.size(); ++l)
+                System.out.println("key: " + maxList.get(l).getKey() + " value: " + maxList.get(l).getValue());
+
+            maxList = findLongestNonRootedTree(countRemoveCore, ver);
+            for (int l = 0; l < maxList.size(); ++l)
                 System.out.println("key: " + maxList.get(l).getKey() + " value: " + maxList.get(l).getValue());
         }
 
@@ -346,31 +361,34 @@ public class Anchored {
         System.out.println( "finish" );
     }
 
-    public static boolean checkRootedTree(int[] degreeKCore, int[] vertex, int v, boolean[] verMarked, int distance, KCoreWG_BZ kc3) {
+    public static boolean checkRootedTree(int[] degreeKCore, boolean[] verVisited, int v, boolean[] verMarked, int distance, KCoreWG_BZ kc3) {
         boolean isRooted = false;
 
         // System.out.println("v: "+v+" neighbors(): "+degreeKCore[v]);
         if (degreeKCore[v] == 0 && !verMarked[v]) {
             verMarked[v] = true;
             int[] neighbors = kc3.graph.getNeighbors(v);
-            // System.out.println("length: "+neighbors.length);
-            // ++counter;
+            // System.out.println("length: "+neighbors.length);            
+            ++distance;
             for (int i = 0; i <= neighbors.length-1; ++i) {
-                /*if (!verMarked[neighbors[i]]) {
-                    sth.st[vertexIndex].put(neighbors[i], 1);
-                    System.out.println("checkRootedTree neighbors["+i+"]: "+neighbors[i]);
-                }*/
+                if (!verMarked[neighbors[i]] && !sth.st[vertexIndex].contains(neighbors[i])) {
+                    sth.st[vertexIndex].put(neighbors[i], distance);
+                    vertexTreeStatus[neighbors[i]] = 'n';
+                    // System.out.println("checkRootedTree neighbors["+i+"]: "+neighbors[i]);
+                }
                 // System.out.println("vertexIndex: "+vertexIndex+" i: "+i+" neighbors("+ neighbors[i] +"): "+degreeKCore[neighbors[i]]+ " "+verMarked[neighbors[i]]+ " v " + v + " Marked " + verMarked[v]);
                 if (degreeKCore[neighbors[i]] == 0) {
                     // System.out.println("neighbors[i]: "+neighbors[i]);
-                    isRooted = checkRootedTree(degreeKCore, vertex, neighbors[i], verMarked, distance, kc3); 
+                    isRooted = checkRootedTree(degreeKCore, verVisited, neighbors[i], verMarked, distance, kc3); 
                 }
                 else {
                     isRooted = true;
-                    boolean verVisited[] = new boolean[verMarked.length];
-                    Arrays.fill(verVisited, false); // TODO: maybe we can use verMarked instead of verVisited. Check it out!
+                    distance = 0;
+                    /*boolean verVisited[] = new boolean[verMarked.length];
+                    Arrays.fill(verVisited, false);*/ // TODO: maybe we can use verMarked instead of verVisited. Check it out!
                     sth.st[vertexIndex].put(neighbors[i], 0);
-                    computeDistance(degreeKCore, vertex, neighbors[i], verVisited, distance, kc3);
+                    vertexTreeStatus[neighbors[i]] = 'r';
+                    computeDistance(degreeKCore, neighbors[i], verVisited, distance, kc3);
                 }
                 // System.out.println("i: "+ i+ " v: "+v);
             }
@@ -378,7 +396,7 @@ public class Anchored {
         return isRooted;
     }
 
-    public static int computeDistance(int[] degreeKCore, int[] vertex, int v, boolean[] verVisited, int distance,KCoreWG_BZ kc3) {
+    public static int computeDistance(int[] degreeKCore, int v, boolean[] verVisited, int distance,KCoreWG_BZ kc3) {
         int[] neighbors = kc3.graph.getNeighbors(v);
         // System.out.println("distance: "+ distance+ " v: "+v + " length: "+neighbors.length);
         verVisited[v] = true;
@@ -389,9 +407,10 @@ public class Anchored {
             // System.out.println("vertexIndex: "+vertexIndex+" i: "+i+" neighbors("+ neighbors[i] +"): "+degreeKCore[neighbors[i]]+ " "+verVisited[neighbors[i]]+ " v " + v + " Marked " + verVisited[v]);
             if (degreeKCore[neighbors[i]] == 0 && !verVisited[neighbors[i]]) {
                 verVisited[neighbors[i]] = true;
-                // System.out.println("computeDistance neighbors["+i+"]: "+neighbors[i]);
+                // System.out.println("computeDistance neighbors["+i+"]: "+neighbors[i]+" distance: "+ distance);
                 sth.st[vertexIndex].put(neighbors[i], distance);
-                computeDistance(degreeKCore, vertex, neighbors[i], verVisited, distance, kc3);
+                vertexTreeStatus[neighbors[i]] = 'r';
+                computeDistance(degreeKCore, neighbors[i], verVisited, distance, kc3);
             }
         }
         // System.out.println("\n");
@@ -399,28 +418,56 @@ public class Anchored {
     }
 
     public static List<Map.Entry<Integer,Integer>> findFurthestVertex(int countRemoveCore) {
-        int max1 = 0;
-        int max2 = 0;
+        char typeTree = 'r';
+        int maxPath1 = 0;
+        int maxPath2 = 0;
         int key1 = 0;
         int key2 = 0;
         
         for (int i = 0; i < countRemoveCore; ++i) {
             for (Integer key : sth.st[i].keys()) {
-                if ((max1 == 0 || max1 < sth.st[i].get(key)) && (sth.st[i].get(key) != 0)) {
-                    max1 = sth.st[i].get(key);
+                if ((maxPath1 == 0 || maxPath1 < sth.st[i].get(key)) && (sth.st[i].get(key) != 0) && (typeTree == vertexTreeStatus[key])) {
+                    maxPath1 = sth.st[i].get(key);
                     key1 = key;
                 }
 
-                if ((max2 == 0 || max2 < sth.st[i].get(key)) && (sth.st[i].get(key) <= max1) && (key1 != key) && (sth.st[i].get(key) != 0)) {
-                    max2 = sth.st[i].get(key);
+                if ((maxPath2 == 0 || maxPath2 < sth.st[i].get(key)) && (sth.st[i].get(key) <= maxPath1) && (key1 != key) && (sth.st[i].get(key) != 0) && (typeTree == vertexTreeStatus[key])) {
+                    maxPath2 = sth.st[i].get(key);
                     key2 = key;
                 }
             }
         }
 
         Map<Integer,Integer> tmpMap = new HashMap<Integer,Integer>();
-        tmpMap.put(key1, max1);
-        tmpMap.put(key2, max2);
+        tmpMap.put(key1, maxPath1);
+        tmpMap.put(key2, maxPath2);
+        List<Map.Entry<Integer,Integer>> result = new ArrayList<Map.Entry<Integer,Integer>>(tmpMap.entrySet());
+
+        return result;
+    }
+
+    public static List<Map.Entry<Integer,Integer>> findLongestNonRootedTree(int countRemoveCore, int[] vertex) {
+        char typeTree = 'n';
+        int endPoint1 = 0;
+        int endPoint2 = 0;
+        int key1 = 0;
+        int key2 = 0;
+
+        for (int i = 0; i < countRemoveCore; ++i) {
+            for (Integer key : sth.st[i].keys()) {
+                if ((endPoint2 == 0 || endPoint2 < sth.st[i].get(key)) && (sth.st[i].get(key) != 0) && (typeTree == vertexTreeStatus[key])) {
+                    endPoint2 = sth.st[i].get(key);
+                    key2 = key;
+
+                    key1 = vertex[i];
+                    endPoint1 = 0;
+                }
+            }
+        }
+
+        Map<Integer,Integer> tmpMap = new HashMap<Integer,Integer>();
+        tmpMap.put(key1, endPoint1);
+        tmpMap.put(key2, endPoint2);
         List<Map.Entry<Integer,Integer>> result = new ArrayList<Map.Entry<Integer,Integer>>(tmpMap.entrySet());
 
         return result;
