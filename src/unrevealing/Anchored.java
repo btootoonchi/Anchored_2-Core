@@ -260,6 +260,8 @@ public class Anchored {
     public static void createKCore_BZ(String path_input, String path_output, int k) throws  ClassNotFoundException, IllegalArgumentException, SecurityException, IllegalAccessException, Exception, IOException {
         long startTime = System.currentTimeMillis();
 
+        int budget = 2;
+
         KCoreWG_BZ kc3 = new KCoreWG_BZ(path_input, "webgraph");
         kc3.KCoreCompute();
         int deg[] = kc3.getDegree();
@@ -345,15 +347,40 @@ public class Anchored {
                 }
             }*/
 
+            int rootedNumberVerticesSaved = 0, nonRootedNumberVerticesSaved = 0;
             Map<Integer,Integer> vertexMap = new HashMap<Integer,Integer>();
-            List<Map.Entry<Integer,Integer>> maxList = new ArrayList<Map.Entry<Integer,Integer>>(vertexMap.entrySet());
-            maxList = findFurthestVertex(countRemoveCore);
-            for (int l = 0; l < maxList.size(); ++l)
-                System.out.println("key: " + maxList.get(l).getKey() + " value: " + maxList.get(l).getValue());
+            List<Map.Entry<Integer,Integer>> anchorVertices = new ArrayList<Map.Entry<Integer,Integer>>(vertexMap.entrySet());
+            anchorVertices = findFurthestLongestVertices(countRemoveCore, ver);
+            for (int l = 0; l < anchorVertices.size(); ++l) {
+                if (l < 2)
+                    rootedNumberVerticesSaved += anchorVertices.get(l).getValue();
+                else
+                    nonRootedNumberVerticesSaved += anchorVertices.get(l).getValue();
+                System.out.println("key: " + anchorVertices.get(l).getKey() + " value: " + anchorVertices.get(l).getValue());
+            }
 
-            maxList = findLongestNonRootedTree(countRemoveCore, ver);
+            /*Iterator<Map.Entry<Integer,Integer>> maxListIterator = maxList.iterator();
+            while (maxListIterator.hasNext()) {
+                System.out.println(maxListIterator.next());
+            }*/
+            /*maxList = findLongestNonRootedTree(countRemoveCore, ver);
             for (int l = 0; l < maxList.size(); ++l)
-                System.out.println("key: " + maxList.get(l).getKey() + " value: " + maxList.get(l).getValue());
+                nonRootedCost += maxList.get(l).getValue();*/
+                // System.out.println("key: " + maxList.get(l).getKey() + " value: " + maxList.get(l).getValue());
+            
+            if (rootedNumberVerticesSaved > nonRootedNumberVerticesSaved || budget == 1) {
+                updateVertex(degKCore, anchorVertices, countRemoveCore, 'r');
+                --budget;
+            }
+            else {
+                updateVertex(degKCore, anchorVertices, countRemoveCore, 'n');
+                budget -= 2;
+            }
+            System.out.println("budget: "+budget);
+            
+            /*for(int i = 0; i < deg.length; ++i) {
+                System.out.println("degree[" + i + "] = " + deg[i] + " degKCore["+ i +"] = "+ degKCore[i] + "\n");
+            }*/
         }
 
         long endTime = System.currentTimeMillis();
@@ -417,36 +444,51 @@ public class Anchored {
         return 0; 
     }
 
-    public static List<Map.Entry<Integer,Integer>> findFurthestVertex(int countRemoveCore) {
-        char typeTree = 'r';
-        int maxPath1 = 0;
-        int maxPath2 = 0;
-        int key1 = 0;
-        int key2 = 0;
+    public static List<Map.Entry<Integer,Integer>> findFurthestLongestVertices(int countRemoveCore, int[] vertex) {
+        char isRootedTree = 'r', isNonRootedTree = 'n';
+        int furthestValue1 = 0, furthestValue2 = 0;
+        int furthestKey1 = 0, furthestKey2 = 0;
+        int endPointValue1 = 0, endPointValue2 = 0;
+        int endpointKey1 = 0, endpointKey2 = 0;
         
         for (int i = 0; i < countRemoveCore; ++i) {
             for (Integer key : sth.st[i].keys()) {
-                if ((maxPath1 == 0 || maxPath1 < sth.st[i].get(key)) && (sth.st[i].get(key) != 0) && (typeTree == vertexTreeStatus[key])) {
-                    maxPath1 = sth.st[i].get(key);
-                    key1 = key;
+                if ((furthestValue1 == 0 || furthestValue1 < sth.st[i].get(key)) && (sth.st[i].get(key) != 0) && (isRootedTree == vertexTreeStatus[key])) {
+                    furthestValue1 = sth.st[i].get(key);
+                    furthestKey1 = key;
                 }
 
-                if ((maxPath2 == 0 || maxPath2 < sth.st[i].get(key)) && (sth.st[i].get(key) <= maxPath1) && (key1 != key) && (sth.st[i].get(key) != 0) && (typeTree == vertexTreeStatus[key])) {
-                    maxPath2 = sth.st[i].get(key);
-                    key2 = key;
+                if ((furthestValue2 == 0 || furthestValue2 < sth.st[i].get(key)) && (sth.st[i].get(key) <= furthestValue1) && (furthestKey1 != key) && (sth.st[i].get(key) != 0) && (isRootedTree == vertexTreeStatus[key])) {
+                    furthestValue2 = sth.st[i].get(key);
+                    furthestKey2 = key;
+                }
+
+                if ((endPointValue2 == 0 || endPointValue2 < sth.st[i].get(key)) && (sth.st[i].get(key) != 0) && (isNonRootedTree == vertexTreeStatus[key])) {
+                    endPointValue2 = sth.st[i].get(key);
+                    endpointKey2 = key;
+
+                    endpointKey1 = vertex[i];
+                    endPointValue1 = 0;
                 }
             }
         }
 
-        Map<Integer,Integer> tmpMap = new HashMap<Integer,Integer>();
-        tmpMap.put(key1, maxPath1);
-        tmpMap.put(key2, maxPath2);
-        List<Map.Entry<Integer,Integer>> result = new ArrayList<Map.Entry<Integer,Integer>>(tmpMap.entrySet());
+        /*Map<Integer,Integer> tmpMap = new HashMap<Integer,Integer>();
+        tmpMap.put(endpointKey1, endPointValue1);
+        tmpMap.put(furthestKey1, furthestValue1);
+        tmpMap.put(endpointKey2, endPointValue2);
+        tmpMap.put(furthestKey2, furthestValue2);
+        List<Map.Entry<Integer,Integer>> result = new ArrayList<Map.Entry<Integer,Integer>>(tmpMap.entrySet());*/
+        List<Map.Entry<Integer,Integer>> result = new ArrayList<Map.Entry<Integer,Integer>>();
+        result.add(new AbstractMap.SimpleEntry<Integer, Integer>(furthestKey1, furthestValue1));
+        result.add(new AbstractMap.SimpleEntry<Integer, Integer>(furthestKey2, furthestValue2));
+        result.add(new AbstractMap.SimpleEntry<Integer, Integer>(endpointKey1, endPointValue1));
+        result.add(new AbstractMap.SimpleEntry<Integer, Integer>(endpointKey2, endPointValue2));
 
         return result;
     }
 
-    public static List<Map.Entry<Integer,Integer>> findLongestNonRootedTree(int countRemoveCore, int[] vertex) {
+    /*public static List<Map.Entry<Integer,Integer>> findLongestNonRootedTree(int countRemoveCore, int[] vertex) {
         char typeTree = 'n';
         int endPoint1 = 0;
         int endPoint2 = 0;
@@ -471,6 +513,24 @@ public class Anchored {
         List<Map.Entry<Integer,Integer>> result = new ArrayList<Map.Entry<Integer,Integer>>(tmpMap.entrySet());
 
         return result;
-    }
+    }*/
+
+    public static void updateVertex(int[] degKCore, List<Map.Entry<Integer,Integer>> anchorVertices, int countRemoveCore, char typeTree) {
+        int index = 0;
+        outerloop:
+        for (; index < countRemoveCore; ++index) {
+            for (Integer key : sth.st[index].keys()) {
+                if (typeTree == 'r' && key == anchorVertices.get(0).getKey())
+                    break outerloop;
+                if (typeTree == 'n' && key == anchorVertices.get(3).getKey())
+                    break outerloop;
+            }
+        }
+
+        if (index < countRemoveCore)
+            for (Integer key : sth.st[index].keys()) 
+                degKCore[key] += 100;
+
+    } 
 }
 
