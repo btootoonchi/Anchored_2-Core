@@ -11,7 +11,7 @@
  *
  * @author Alex Thomo, thomo@uvic.ca, 2015
  */
-package kcore;
+package ca.uvic.css.kcore;
 
 import ca.uvic.css.graph.Graph;
 import ca.uvic.css.graph.GraphWebgraph;

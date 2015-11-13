@@ -9,14 +9,15 @@
  * The graph is stored using Webgraph (see P. Boldi and S. Vigna. The webgraph framework I: compression techniques. WWW 04.)
  *
  * @author Alex Thomo, thomo@uvic.ca, 2015
+ * Modified by Babak Tootoonchi, babakt@uvic.ca, 2015
  */
-package kcore;
+package ca.uvic.css.kcore;
 
 import java.io.*;
 import java.util.*;
 
-import ca.uvic.css.graph.Graph;
-import ca.uvic.css.graph.GraphWebgraph;
+import ca.uvic.css.graph.*;
+// import ca.uvic.css.graph.GraphWebgraph;
 
 public class KCoreWG_BZ {
 	public Graph graph;
@@ -65,11 +66,7 @@ public class KCoreWG_BZ {
     public void KCoreCompute () {
     	int n = graph.size(); 
         int md = graph.maxDegree(); 
-    	/*int[] vertex = new int[n];
-    	int[] position = new int[n];
-    	int[] degree = new int[n];
-    	int[] bin = new int[md + 1];*/ //md+1 because we can zero degree 
-
+    	
     	for(int d = 0; d <= md; d++) 
     		bin[d] = 0;
     	for(int v = 0; v < n; v++) { 
@@ -81,8 +78,6 @@ public class KCoreWG_BZ {
     	}
         
         System.arraycopy(degree, 0, degreeGraph, 0, degree.length);
-        /*for(int j = 0; j < degree.length; ++j) 
-            System.out.println("degree["+j+"]="+degree[j]);*/
 
     	int start = 0; //start=1 in original, but no problem
     	for(int d = 0; d <= md; d++) {
@@ -130,8 +125,8 @@ public class KCoreWG_BZ {
     	return;
     }
     
-	/*public static void main(String[] args) throws Exception {
-		long startTime = System.currentTimeMillis();
+	public static void main(String[] args) throws Exception {
+		/*long startTime = System.currentTimeMillis();
 		
 		//args = new String[] {"simplegraph"};
 		
@@ -153,6 +148,6 @@ public class KCoreWG_BZ {
 		System.out.println(cnt + "\t" + (kc3.E/2) + "\t" + kc3.graph.maxDegree() + "\t" + kmax + "\t" + (sum/cnt) );
 		
 		long estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.println(args[0] + ": Time elapsed = " + estimatedTime/1000.0);
-	}*/
+        System.out.println(args[0] + ": Time elapsed = " + estimatedTime/1000.0);*/
+	}
 }
