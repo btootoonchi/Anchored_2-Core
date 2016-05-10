@@ -95,7 +95,7 @@ public class Anchored {
                 boolean isRooted = false;
                 Arrays.fill(verMarked, false);
 
-                //sth = new SeparateChainingHash<Integer, Integer>(countRemoveCore);
+                //sth = new SeparateChainingHash<Integer, Integer>(countRemoveCore+1);
                 sth = new SeparateChainingHash<Integer, Integer>(vertices.length);
                 /*for (vertexIndex = 0; vertexIndex <= vertices.length-1; ++vertexIndex) {
 
@@ -196,7 +196,7 @@ public class Anchored {
         do {
             v = 0;
             isIterate = false;
-            while((degreeKCore[vertices[v]] < k && degree[v] > 0 && v < vertices.length-1)) {
+            while((degreeKCore[vertices[v]] <= k /*&& degree[v] > 0 */&& v < vertices.length-1)) {
                 if (verMarked[v]) {
                     degreeKCore[vertices[v]] = 0;
                     // if (DEBUG) System.out.println("\nv: "+v+" vertices[v]: "+vertices[v]+" degreeKCore[vertices[v]]: "+degreeKCore[vertices[v]]);
@@ -377,4 +377,3 @@ public class Anchored {
         }
     }
 }
-
