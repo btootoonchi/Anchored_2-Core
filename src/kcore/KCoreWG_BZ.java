@@ -40,6 +40,8 @@ public class KCoreWG_BZ {
             bin = new int[graph.maxDegree() + 1];
             degreeGraph = new int[graph.size()];
             this.E = 0;
+
+            KCoreIntial();
         }
 	}
 	
@@ -63,45 +65,83 @@ public class KCoreWG_BZ {
         return bin;
     }
 
-    public void KCoreCompute () {
-    	int n = graph.size(); 
+    public int getMaxDegree() {
+        return graph.maxDegree();
+    }
+
+    private void KCoreIntial() {
+        int n = graph.size(); 
         int md = graph.maxDegree(); 
-    	
-    	for(int d = 0; d <= md; d++) 
-    		bin[d] = 0;
-    	for(int v = 0; v < n; v++) { 
-    		if (printprogress && v % 1000000 == 0) 
-    			System.out.println(v);
-    		degree[v] = graph.outdegree(v); 
+        
+        for(int d = 0; d <= md; d++) 
+            bin[d] = 0;
+        for(int v = 0; v < n; v++) { 
+            degree[v] = graph.outdegree(v); 
             E += degree[v];
-    		bin[ degree[v] ]++;
-    	}
+            bin[ degree[v] ]++;
+        }
         
         System.arraycopy(degree, 0, degreeGraph, 0, degree.length);
 
-    	int start = 0; //start=1 in original, but no problem
-    	for(int d = 0; d <= md; d++) {
-    		int num = bin[d];
-    		bin[d] = start;
-    		start += num;
-    	}
+        int start = 0; //start=1 in original, but no problem
+        for(int d = 0; d <= md; d++) {
+            int num = bin[d];
+            bin[d] = start;
+            start += num;
+        }
 
-    	//bin-sort vertices by degree
-    	for(int v = 0; v < n; v++) {
-    		position[v] = bin[ degree[v] ];
-    		vertex[ position[v] ] = v;
-    		bin[ degree[v] ]++;
-    	}
+        //bin-sort vertices by degree
+        for(int v = 0; v < n; v++) {
+            position[v] = bin[ degree[v] ];
+            vertex[ position[v] ] = v;
+            bin[ degree[v] ]++;
+        }
 
-    	//recover bin[]
-    	for(int d = md; d >= 1; d--) 
-    		bin[d] = bin[d-1];
-    	bin[0] = 0; //1 in original
+        //recover bin[]
+        for(int d = md; d >= 1; d--) 
+            bin[d] = bin[d-1];
+        bin[0] = 0; 
+    }
+
+    public void KCoreReIntial(int[] degKCore) {
+        int n = graph.size(); 
+        int md = graph.maxDegree(); 
+
+        for(int d = 0; d <= md; d++) 
+            bin[d] = 0;
+        for(int v = 0; v < n; v++) { 
+            degree[v] = degKCore[v]; 
+            E += degree[v];
+            bin[ degree[v] ]++;
+        }
+        
+        System.arraycopy(degree, 0, degreeGraph, 0, degree.length);
+
+        int start = 0; //start=1 in original, but no problem
+        for(int d = 0; d <= md; d++) {
+            int num = bin[d];
+            bin[d] = start;
+            start += num;
+        }
+
+        //bin-sort vertices by degree
+        for(int v = 0; v < n; v++) {
+            position[v] = bin[ degree[v] ];
+            vertex[ position[v] ] = v;
+            bin[ degree[v] ]++;
+        }
+
+        //recover bin[]
+        for(int d = md; d >= 1; d--) 
+            bin[d] = bin[d-1];
+        bin[0] = 0; 
+    }
+
+    public void KCoreCompute () {
+        int n = graph.size();
 
     	//main algorithm
     	for(int i = 0; i < n; i++) {
-    		if (printprogress && i % 1000000 == 0) 
-    			System.out.println(i);
     		int v = vertex[i]; //smallest degree vertex
     		int[] N_v = graph.getNeighbors(v);
     		for(Integer u : N_v) {
@@ -121,7 +161,7 @@ public class KCoreWG_BZ {
     			}
     		}
     	}
-            
+  
     	return;
     }
     
