@@ -1,7 +1,7 @@
 # Anchored 2-core
 =======================================
 
-This is a Java implementation of "Algorithm 2.1. An efficient, exact algorithm for anchored 2-core", according to the description given in the following paper: Bhawalkar, Kshipra, et al. "Preventing unraveling in social networks: the anchored k-core problem." Automata, Languages, and Programming. Springer Berlin Heidelberg, 2012. 440-451. URL: http://link.springer.com/chapter/10.1007/978-3-642-31585-5_40
+This is an efficient implementation of the anchored 2-core algorithm proposed by Bhawalkar, Kshipra, et al. in "Preventing unraveling in social networks: the anchored k-core problem." Automata, Languages, and Programming. Springer Berlin Heidelberg, 2012. 440-451. URL: http://link.springer.com/chapter/10.1007/978-3-642-31585-5_40
 
 MINIMUM REQUIREMENTS:
 ---------------------
